@@ -1,68 +1,78 @@
-# MealSync — deployment guide
+# MealSync
 
-You already have a GitHub account, so here's the path from this folder to a real, working URL.
+A shared meal planner for households — replaces typing out daily WhatsApp meal-plan texts. Everyone in your household sees and edits the same plan, and the app can suggest tomorrow's meals and estimate nutrition using AI.
 
-## 1. Set up Supabase (free database)
+Live app: https://meal-sync-pearl.vercel.app
 
-1. Go to **supabase.com**, sign up, and create a new project (pick any name/region; the free tier is plenty for this).
-2. Once it's created, open **SQL Editor** → **New query**, paste in the contents of `schema.sql` from this folder, and run it. This creates the two tables the app needs.
-3. Go to **Project Settings → API**. Copy two values:
-   - **Project URL** (looks like `https://xxxxxxxx.supabase.co`)
-   - **anon public key** (a long string)
+---
 
-## 2. Get your Gemini API key (free)
+## Using the app
 
-1. Go to **aistudio.google.com**, sign in, click **Get API key** → **Create API key**.
-2. Copy the key (starts with `AIza...`). Keep it private — you'll only paste it into Vercel, never into the frontend code.
+### First time setup
 
-## 3. Fill in your config
+1. Open the app link on your phone in Safari (or Chrome).
+2. Tap **Create a new household** — this generates a 6-character code (e.g. `7K2QRT`) and remembers it on this device.
+3. Tap the **"Household: XXXXXX"** button in the header to copy an invite message, and send it to the rest of your household (e.g. over WhatsApp).
+4. On their phone, they open the same app link, tap **I have a code**, and enter the code you sent. From then on, you're both looking at and editing the same shared plan.
+5. In Safari: **Share → Add to Home Screen** on each phone, so it behaves like a regular app icon instead of a browser tab.
 
-Open `index.html` in this folder and find these two lines near the top of the `<script>`:
+### Day-to-day use
+
+- **Plan tab**: shows one day at a time. Use the arrows to move between days. Each meal (Breakfast/Lunch/Dinner) has one text box per household member — type what's for that meal and it saves per person.
+- **Suggest this day's plan**: on an empty day, tap this to get an AI-suggested plan for everyone, based on your pantry, preferences, and the last few days' meals (so it avoids repeats). Suggestions are a draft — edit anything before saving.
+- **Save this day's plan**: locks in your edits for that day.
+- **Estimate nutrition**: on any day with meals filled in, get an estimated calorie and protein/carb/fat breakdown per person per meal, plus a balanced/unbalanced read. These are AI estimates for typical home-cooked portions, not verified lab values.
+- **Pantry & Preferences tab**:
+  - **Who's eating** — add, rename, or remove household members.
+  - **At home right now** — a running list of groceries/veggies you currently have; used to make suggestions realistic.
+  - **Preferences & cuisine style** — free text for cooking style, likes, dislikes, anything to avoid. Feeds every AI suggestion.
+
+### A note on privacy
+
+There's no login — access is controlled only by knowing the household code. That's convenient for sharing between people you trust, but it also means anyone who has (or guesses) your code can see and edit your data. Don't put anything sensitive in it.
+
+---
+
+## Setting this up yourself (fork/clone)
+
+You'll need three free accounts: **GitHub** (this repo), **Supabase**, and **Google AI Studio**.
+
+### 1. Supabase (database)
+
+1. Create a project at supabase.com.
+2. In **SQL Editor → New query**, run the contents of `schema.sql` from this repo.
+3. In **Project Settings → API**, copy the **Project URL** (e.g. `https://xxxxxxxx.supabase.co` — no path after `.co`) and the **anon public** key.
+
+### 2. Gemini API key (AI suggestions/nutrition)
+
+1. Go to aistudio.google.com → **Get API key** → **Create API key**.
+2. Copy it. This key is never put in the frontend code — only into Vercel's environment variables (step 4).
+
+### 3. Configure the app
+
+In `index.html`, near the top of the `<script>` tag, set:
 
 ```js
-var SUPABASE_URL = "YOUR_SUPABASE_URL";
-var SUPABASE_ANON_KEY = "YOUR_SUPABASE_ANON_KEY";
+var SUPABASE_URL = "https://xxxxxxxx.supabase.co"; // no trailing path
+var SUPABASE_ANON_KEY = "your-anon-key-here";
 ```
 
-Replace both with the values you copied in step 1. Save the file.
+### 4. Deploy on Vercel
 
-(The Gemini key does **not** go in this file — it goes into Vercel's environment variables in step 5, so it stays private.)
+1. Import this GitHub repo at vercel.com.
+2. Before deploying, add an environment variable: `GEMINI_API_KEY` = your key from step 2.
+3. Deploy. Vercel gives you a live URL and redeploys automatically on every push to `main`.
 
-## 4. Push this folder to GitHub
+### Project structure
 
-From inside this folder:
-
-```bash
-git init
-git add .
-git commit -m "MealSync initial deploy"
-git branch -M main
-git remote add origin https://github.com/<your-username>/mealSync.git
-git push -u origin main
+```
+index.html         the whole frontend (no build step — plain HTML/CSS/JS)
+api/suggest.js      serverless function — AI meal suggestion (Gemini)
+api/nutrition.js    serverless function — AI nutrition estimate (Gemini)
+schema.sql          Supabase table + policy definitions
 ```
 
-(Create the empty `mealSync` repo on GitHub first if it doesn't exist yet.)
+### Known limitations
 
-## 5. Deploy on Vercel (free)
-
-1. Go to **vercel.com**, sign in with your GitHub account.
-2. Click **Add New → Project**, and import the `mealSync` repo you just pushed.
-3. Before deploying, open **Environment Variables** and add:
-   - Name: `GEMINI_API_KEY`
-   - Value: the key from step 2
-4. Click **Deploy**. After a minute, Vercel gives you a live URL like `https://mealSync.vercel.app`.
-
-## 6. Try it out
-
-1. Open the Vercel URL on your phone in Safari.
-2. Tap **Create a new household** — this generates a 6-character code and saves it on your phone.
-3. Tap the **"Household: XXXXXX"** button in the header to copy an invite message — send it to your husband.
-4. On his phone, he opens the same URL, taps **"I have a code"**, and enters the code you sent.
-5. From here you're both looking at the same shared data — try adding a meal on one phone and refreshing on the other.
-6. In Safari, use **Share → Add to Home Screen** on both phones so it behaves like a regular app icon.
-
-## Notes
-
-- **This app has no login** — anyone who has your household code can see and edit your data. Fine for sharing between two people you trust; don't put anything sensitive in it.
-- **Free tier limits**: Gemini's free tier allows a modest number of requests per minute/day — comfortably enough for a household using the "suggest" and "nutrition" buttons a few times a day. If you ever see errors specifically from `/api/suggest` or `/api/nutrition`, check your usage at aistudio.google.com.
-- **If you change the code later**, just `git push` again — Vercel redeploys automatically on every push to `main`.
+- No authentication — household code is a convenience shortcut, not real security (see privacy note above).
+- Gemini's free tier has a modest per-minute/per-day request limit — fine for normal household use; watch usage at aistudio.google.com if `/api/suggest` or `/api/nutrition` start failing.
