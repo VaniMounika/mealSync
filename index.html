@@ -1,0 +1,1073 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>MealSync — Meal Planner</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600;9..144,700&family=Work+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap');
+
+  :root{
+    --bg:#F7F2E7;
+    --bg-alt:#EFE6D3;
+    --ink:#2B2420;
+    --ink-soft:#6B5D4E;
+    --card:#FFFDF8;
+    --border:#E4D6B8;
+    --brass:#A9863B;
+    --turmeric:#C2860E;
+    --turmeric-soft:#F1DBA6;
+    --curry:#48603F;
+    --curry-soft:#D7E2C9;
+    --tamarind:#7A3230;
+    --tamarind-soft:#EFD2CB;
+    --shadow: 0 1px 2px rgba(43,36,32,.06), 0 6px 16px rgba(43,36,32,.07);
+  }
+
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--bg);
+    color:var(--ink);
+    font-family:'Work Sans', -apple-system, sans-serif;
+    -webkit-font-smoothing:antialiased;
+    padding-bottom:env(safe-area-inset-bottom);
+  }
+  .app{
+    max-width:560px;
+    margin:0 auto;
+    padding:0 16px 40px;
+  }
+
+  /* ---- Header ---- */
+  header.top{
+    padding:calc(env(safe-area-inset-top) + 20px) 4px 14px;
+    display:flex;
+    align-items:flex-start;
+    justify-content:space-between;
+    gap:10px;
+  }
+  .brand h1{
+    font-family:'Fraunces', serif;
+    font-optical-sizing:auto;
+    font-weight:600;
+    font-size:28px;
+    margin:0;
+    letter-spacing:-.01em;
+  }
+  .brand p{
+    margin:2px 0 0;
+    font-size:12.5px;
+    color:var(--ink-soft);
+  }
+  .share-btn{
+    border:1px solid var(--brass);
+    background:var(--card);
+    color:var(--ink);
+    font-family:'Work Sans',sans-serif;
+    font-size:12px;
+    font-weight:600;
+    padding:8px 12px;
+    border-radius:20px;
+    cursor:pointer;
+    white-space:nowrap;
+    box-shadow:var(--shadow);
+  }
+  .share-btn:active{transform:scale(.97);}
+
+  /* ---- Tabs ---- */
+  .tabs{
+    display:flex;
+    gap:6px;
+    background:var(--bg-alt);
+    padding:4px;
+    border-radius:14px;
+    margin-bottom:18px;
+  }
+  .tab{
+    flex:1;
+    text-align:center;
+    padding:9px 6px;
+    font-size:13px;
+    font-weight:600;
+    color:var(--ink-soft);
+    border-radius:10px;
+    cursor:pointer;
+    border:none;
+    background:transparent;
+    font-family:'Work Sans',sans-serif;
+  }
+  .tab.active{
+    background:var(--card);
+    color:var(--ink);
+    box-shadow:var(--shadow);
+  }
+
+  /* ---- Day nav ---- */
+  .daynav{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:16px;
+  }
+  .daynav button{
+    width:34px;height:34px;
+    border-radius:50%;
+    border:1px solid var(--border);
+    background:var(--card);
+    font-size:16px;
+    cursor:pointer;
+    color:var(--ink);
+  }
+  .daynav .datelabel{
+    text-align:center;
+  }
+  .daynav .datelabel .d{
+    font-family:'Fraunces',serif;
+    font-weight:600;
+    font-size:18px;
+  }
+  .daynav .datelabel .tag{
+    display:inline-block;
+    margin-top:2px;
+    font-size:10.5px;
+    font-weight:700;
+    letter-spacing:.04em;
+    text-transform:uppercase;
+    padding:2px 8px;
+    border-radius:20px;
+  }
+  .tag.saved{background:var(--curry-soft); color:var(--curry);}
+  .tag.draft{background:var(--turmeric-soft); color:#8A5D08;}
+  .tag.empty{background:var(--bg-alt); color:var(--ink-soft);}
+
+  /* ---- Suggest CTA ---- */
+  .suggest-cta{
+    background:linear-gradient(135deg, var(--turmeric-soft), var(--bg-alt));
+    border:1px solid var(--turmeric-soft);
+    border-radius:16px;
+    padding:16px;
+    margin-bottom:18px;
+    text-align:center;
+  }
+  .suggest-cta p{
+    margin:0 0 10px;
+    font-size:13.5px;
+    color:var(--ink-soft);
+  }
+  .btn{
+    font-family:'Work Sans',sans-serif;
+    font-weight:700;
+    font-size:14px;
+    border:none;
+    border-radius:24px;
+    padding:11px 20px;
+    cursor:pointer;
+  }
+  .btn-primary{background:var(--turmeric); color:#fff;}
+  .btn-primary:disabled{opacity:.55; cursor:default;}
+  .btn-outline{background:transparent; border:1px solid var(--ink); color:var(--ink);}
+  .btn-ghost{background:transparent; color:var(--ink-soft); font-weight:600; text-decoration:underline;}
+  .btn-sm{padding:7px 14px; font-size:12.5px;}
+  .btn-row{display:flex; gap:8px; justify-content:center; flex-wrap:wrap;}
+
+  /* ---- Meal slot cards ---- */
+  .slot{
+    margin-bottom:18px;
+  }
+  .slot-head{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .dot{width:9px;height:9px;border-radius:50%;flex-shrink:0;}
+  .dot.breakfast{background:var(--turmeric);}
+  .dot.lunch{background:var(--curry);}
+  .dot.dinner{background:var(--tamarind);}
+  .slot-head h3{
+    font-family:'Fraunces',serif;
+    font-size:16px;
+    font-weight:600;
+    margin:0;
+  }
+  .slot-card{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:14px;
+    box-shadow:var(--shadow);
+    overflow:hidden;
+  }
+  .slot-card.breakfast{border-top:3px solid var(--turmeric);}
+  .slot-card.lunch{border-top:3px solid var(--curry);}
+  .slot-card.dinner{border-top:3px solid var(--tamarind);}
+  .person-row{
+    padding:12px 14px;
+    border-bottom:1px solid var(--border);
+  }
+  .person-row:last-child{border-bottom:none;}
+  .person-row label{
+    display:block;
+    font-size:11px;
+    font-weight:700;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    color:var(--ink-soft);
+    margin-bottom:4px;
+  }
+  .person-row textarea{
+    width:100%;
+    border:none;
+    background:transparent;
+    resize:none;
+    font-family:'Work Sans',sans-serif;
+    font-size:14.5px;
+    color:var(--ink);
+    padding:0;
+    min-height:22px;
+  }
+  .person-row textarea:focus{outline:none;}
+
+  /* nutrition chip */
+  .nutri{
+    margin-top:8px;
+    padding-top:8px;
+    border-top:1px dashed var(--border);
+    display:flex;
+    flex-wrap:wrap;
+    gap:6px 12px;
+    font-family:'JetBrains Mono', monospace;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    align-items:center;
+  }
+  .nutri .cal{font-weight:600; color:var(--ink);}
+  .balanced-badge{
+    font-family:'Work Sans',sans-serif;
+    font-weight:700;
+    font-size:10px;
+    text-transform:uppercase;
+    letter-spacing:.03em;
+    padding:2px 8px;
+    border-radius:10px;
+  }
+  .balanced-badge.yes{background:var(--curry-soft); color:var(--curry);}
+  .balanced-badge.no{background:var(--tamarind-soft); color:var(--tamarind);}
+  .nutri-note{
+    width:100%;
+    font-family:'Work Sans',sans-serif;
+    font-style:italic;
+    font-size:11.5px;
+    color:var(--ink-soft);
+    margin-top:2px;
+  }
+
+  /* ---- Save bar ---- */
+  .savebar{
+    position:sticky;
+    bottom:0;
+    padding:12px 0 6px;
+    background:linear-gradient(to top, var(--bg) 70%, transparent);
+    display:flex;
+    gap:8px;
+    justify-content:center;
+  }
+
+  /* ---- Pantry/Prefs tab ---- */
+  .section-block{
+    margin-bottom:22px;
+  }
+  .section-block h2{
+    font-family:'Fraunces',serif;
+    font-size:17px;
+    margin:0 0 3px;
+  }
+  .section-block .hint{
+    font-size:12px;
+    color:var(--ink-soft);
+    margin:0 0 10px;
+  }
+  .chips{
+    display:flex;
+    flex-wrap:wrap;
+    gap:7px;
+    margin-bottom:10px;
+  }
+  .chip{
+    background:var(--card);
+    border:1px solid var(--border);
+    border-radius:20px;
+    padding:6px 8px 6px 12px;
+    font-size:13px;
+    display:flex;
+    align-items:center;
+    gap:6px;
+  }
+  .chip button{
+    border:none;
+    background:var(--bg-alt);
+    color:var(--ink-soft);
+    width:18px;height:18px;
+    border-radius:50%;
+    cursor:pointer;
+    font-size:11px;
+    line-height:1;
+  }
+  .add-row{display:flex; gap:8px;}
+  .add-row input{
+    flex:1;
+    border:1px solid var(--border);
+    background:var(--card);
+    border-radius:10px;
+    padding:9px 12px;
+    font-family:'Work Sans',sans-serif;
+    font-size:14px;
+  }
+  .add-row input:focus{outline:2px solid var(--turmeric-soft);}
+  textarea.prefbox{
+    width:100%;
+    border:1px solid var(--border);
+    background:var(--card);
+    border-radius:12px;
+    padding:12px;
+    font-family:'Work Sans',sans-serif;
+    font-size:14px;
+    min-height:80px;
+    resize:vertical;
+  }
+  textarea.prefbox:focus{outline:2px solid var(--turmeric-soft);}
+
+  .profile-row{
+    display:flex;
+    align-items:center;
+    gap:8px;
+    margin-bottom:8px;
+  }
+  .profile-row input{
+    flex:1;
+    border:1px solid var(--border);
+    background:var(--card);
+    border-radius:10px;
+    padding:8px 12px;
+    font-family:'Work Sans',sans-serif;
+    font-size:14px;
+  }
+  .profile-row button.remove{
+    border:none;
+    background:var(--tamarind-soft);
+    color:var(--tamarind);
+    width:28px;height:28px;
+    border-radius:50%;
+    cursor:pointer;
+  }
+
+  /* ---- misc ---- */
+  .empty-state{
+    text-align:center;
+    padding:30px 10px;
+    color:var(--ink-soft);
+    font-size:13.5px;
+  }
+  .toast{
+    position:fixed;
+    left:50%;
+    bottom:24px;
+    transform:translateX(-50%);
+    background:var(--ink);
+    color:#fff;
+    padding:10px 18px;
+    border-radius:20px;
+    font-size:13px;
+    font-weight:600;
+    box-shadow:var(--shadow);
+    z-index:50;
+    opacity:0;
+    pointer-events:none;
+    transition:opacity .25s ease;
+  }
+  .toast.show{opacity:1;}
+  .spinner{
+    display:inline-block;
+    width:14px;height:14px;
+    border:2px solid rgba(255,255,255,.5);
+    border-top-color:#fff;
+    border-radius:50%;
+    animation:spin .7s linear infinite;
+    vertical-align:-2px;
+    margin-right:6px;
+  }
+  .spinner.dark{border-color:rgba(43,36,32,.25); border-top-color:var(--ink);}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .disclaimer{
+    font-size:11px;
+    color:var(--ink-soft);
+    text-align:center;
+    margin-top:6px;
+    line-height:1.5;
+  }
+  .error-box{
+    background:var(--tamarind-soft);
+    color:var(--tamarind);
+    border-radius:10px;
+    padding:10px 12px;
+    font-size:12.5px;
+    margin-bottom:12px;
+  }
+</style>
+</head>
+<body>
+<div class="app" id="app"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ---------------- Config — fill these in after creating your Supabase project ---------------- */
+  var SUPABASE_URL = "https://ffedrsjiekpusihajprj.supabase.co/rest/v1/"; // e.g. https://xxxxxxxx.supabase.co
+  var SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImZmZWRyc2ppZWtwdXNpaGFqcHJqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODUwOTI5MzEsImV4cCI6MjEwMDY2ODkzMX0.z-3PjTYYglERtNs1rSfjetgXq-ty9XdlHTCBe4rmyZQ";
+
+  /* ---------------- State ---------------- */
+  var state = {
+    tab: 'plan',
+    currentDate: todayStr(),
+    profiles: null,     // [{id,name}]
+    pantry: null,        // [string]
+    preferences: '',
+    planCache: {},       // dateStr -> plan object (or null if confirmed empty)
+    loadedSettings: false,
+    busy: { suggest:false, nutrition:false, save:false },
+    error: null,
+    householdId: null,   // set once onboarding completes
+    onboarding: { mode:'choose', joinCode:'', busy:false, error:null }
+  };
+
+  var SLOTS = [
+    {key:'breakfast', label:'Breakfast'},
+    {key:'lunch', label:'Lunch'},
+    {key:'dinner', label:'Dinner'}
+  ];
+
+  /* ---------------- Date helpers ---------------- */
+  function todayStr(){ return fmt(new Date()); }
+  function fmt(d){
+    var y=d.getFullYear(), m=String(d.getMonth()+1).padStart(2,'0'), day=String(d.getDate()).padStart(2,'0');
+    return y+'-'+m+'-'+day;
+  }
+  function addDays(dateStr, n){
+    var parts = dateStr.split('-').map(Number);
+    var d = new Date(parts[0], parts[1]-1, parts[2]);
+    d.setDate(d.getDate()+n);
+    return fmt(d);
+  }
+  function dateLabel(dateStr){
+    var t = todayStr(), tmr = addDays(t,1), yst = addDays(t,-1);
+    var parts = dateStr.split('-').map(Number);
+    var d = new Date(parts[0], parts[1]-1, parts[2]);
+    var opts = { weekday:'short', day:'numeric', month:'short' };
+    var base = d.toLocaleDateString('en-GB', opts);
+    if(dateStr===t) return 'Today · '+base;
+    if(dateStr===tmr) return 'Tomorrow · '+base;
+    if(dateStr===yst) return 'Yesterday · '+base;
+    return base;
+  }
+
+  function uid(){ return 'p'+Math.random().toString(36).slice(2,9); }
+
+  /* ---------------- Supabase REST helpers ---------------- */
+  function sbHeaders(extra){
+    var h = {
+      "apikey": SUPABASE_ANON_KEY,
+      "Authorization": "Bearer " + SUPABASE_ANON_KEY,
+      "Content-Type": "application/json"
+    };
+    if(extra) for(var k in extra) h[k] = extra[k];
+    return h;
+  }
+
+  function sbGet(path){
+    return fetch(SUPABASE_URL + "/rest/v1/" + path, { headers: sbHeaders() })
+      .then(function(res){ if(!res.ok) throw new Error('Supabase GET failed'); return res.json(); });
+  }
+  function sbPost(path, body, extraHeaders){
+    return fetch(SUPABASE_URL + "/rest/v1/" + path, {
+      method:"POST",
+      headers: sbHeaders(extraHeaders),
+      body: JSON.stringify(body)
+    }).then(function(res){ if(!res.ok) throw new Error('Supabase POST failed'); return res.json().catch(function(){return null;}); });
+  }
+  function sbPatch(path, body){
+    return fetch(SUPABASE_URL + "/rest/v1/" + path, {
+      method:"PATCH",
+      headers: sbHeaders(),
+      body: JSON.stringify(body)
+    }).then(function(res){ if(!res.ok) throw new Error('Supabase PATCH failed'); return res.json().catch(function(){return null;}); });
+  }
+
+  /* ---------------- Household onboarding ---------------- */
+  function newHouseholdCode(){
+    var chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no 0/O/1/I to avoid confusion
+    var out = '';
+    for(var i=0;i<6;i++) out += chars[Math.floor(Math.random()*chars.length)];
+    return out;
+  }
+
+  function createHousehold(){
+    state.onboarding.busy = true; state.onboarding.error = null; render();
+    var code = newHouseholdCode();
+    var defaults = {
+      id: code,
+      profiles: [{id:uid(), name:'Me'}, {id:uid(), name:'Family member'}],
+      pantry: [],
+      preferences: ''
+    };
+    sbPost('households', defaults, { "Prefer":"return=representation" }).then(function(){
+      localStorage.setItem('mealSync_household', code);
+      state.householdId = code;
+      state.onboarding.busy = false;
+      boot();
+    }).catch(function(){
+      state.onboarding.busy = false;
+      state.onboarding.error = "Couldn't create a household — check your connection and try again.";
+      render();
+    });
+  }
+
+  function joinHousehold(code){
+    code = (code||'').trim().toUpperCase();
+    if(!code){ state.onboarding.error = 'Enter a household code.'; render(); return; }
+    state.onboarding.busy = true; state.onboarding.error = null; render();
+    sbGet('households?id=eq.'+encodeURIComponent(code)+'&select=id').then(function(rows){
+      if(!rows || !rows.length){
+        state.onboarding.busy = false;
+        state.onboarding.error = "That code wasn't found. Double-check it with whoever shared it.";
+        render();
+        return;
+      }
+      localStorage.setItem('mealSync_household', code);
+      state.householdId = code;
+      state.onboarding.busy = false;
+      boot();
+    }).catch(function(){
+      state.onboarding.busy = false;
+      state.onboarding.error = "Couldn't check that code — check your connection and try again.";
+      render();
+    });
+  }
+
+  /* ---------------- Storage (Supabase-backed, scoped to household) ---------------- */
+  function loadSettings(){
+    return sbGet('households?id=eq.'+encodeURIComponent(state.householdId)+'&select=profiles,pantry,preferences').then(function(rows){
+      var data = (rows && rows[0]) || null;
+      if(!data){
+        data = { profiles: [{id:uid(), name:'Me'}, {id:uid(), name:'Family member'}], pantry: [], preferences: '' };
+      }
+      state.profiles = data.profiles;
+      state.pantry = data.pantry || [];
+      state.preferences = data.preferences || '';
+    }).catch(function(){
+      state.profiles = [{id:uid(), name:'Me'}, {id:uid(), name:'Family member'}];
+      state.pantry = [];
+      state.preferences = '';
+    });
+  }
+
+  function saveSettings(){
+    var data = { profiles: state.profiles, pantry: state.pantry, preferences: state.preferences };
+    return sbPatch('households?id=eq.'+encodeURIComponent(state.householdId), data).catch(function(){
+      showToast("Couldn't save — check your connection");
+    });
+  }
+
+  function loadPlan(dateStr){
+    if(state.planCache.hasOwnProperty(dateStr)) return Promise.resolve(state.planCache[dateStr]);
+    return sbGet('meal_plans?household_id=eq.'+encodeURIComponent(state.householdId)+'&date=eq.'+dateStr+'&select=*').then(function(rows){
+      var plan = (rows && rows[0]) ? { date: rows[0].date, status: rows[0].status, slots: rows[0].slots, nutrition: rows[0].nutrition, aiNotes: rows[0].ai_notes } : null;
+      state.planCache[dateStr] = plan;
+      return plan;
+    }).catch(function(){
+      state.planCache[dateStr] = null;
+      return null;
+    });
+  }
+
+  function savePlan(dateStr, plan){
+    state.planCache[dateStr] = plan;
+    var row = {
+      household_id: state.householdId,
+      date: dateStr,
+      slots: plan.slots,
+      nutrition: plan.nutrition,
+      status: plan.status,
+      ai_notes: plan.aiNotes
+    };
+    return sbPost('meal_plans', row, { "Prefer":"resolution=merge-duplicates" }).catch(function(){
+      showToast("Couldn't save — check your connection");
+    });
+  }
+
+  function emptyPlan(dateStr){
+    var slots = {};
+    SLOTS.forEach(function(s){
+      slots[s.key] = {};
+      state.profiles.forEach(function(p){ slots[s.key][p.id] = ''; });
+    });
+    return { date:dateStr, status:'empty', slots:slots, nutrition:null, aiNotes:null };
+  }
+
+  function ensureProfilesInPlan(plan){
+    SLOTS.forEach(function(s){
+      if(!plan.slots[s.key]) plan.slots[s.key] = {};
+      state.profiles.forEach(function(p){
+        if(!(p.id in plan.slots[s.key])) plan.slots[s.key][p.id] = '';
+      });
+    });
+    return plan;
+  }
+
+  /* ---------------- Backend AI calls (own serverless functions, see /api) ---------------- */
+  function callApi(endpoint, body){
+    return fetch(endpoint, {
+      method:"POST",
+      headers:{ "Content-Type":"application/json" },
+      body: JSON.stringify(body)
+    }).then(function(res){
+      return res.json().then(function(data){
+        if(!res.ok) throw new Error(data && data.error ? data.error : 'Request failed');
+        return data;
+      });
+    });
+  }
+
+  function recentHistoryBlock(dateStr){
+    var days = [addDays(dateStr,-1), addDays(dateStr,-2), addDays(dateStr,-3)];
+    return Promise.all(days.map(loadPlan)).then(function(plans){
+      var lines = [];
+      plans.forEach(function(plan, i){
+        if(!plan || plan.status==='empty') return;
+        var dl = days[i];
+        var parts = [];
+        SLOTS.forEach(function(s){
+          state.profiles.forEach(function(p){
+            var v = plan.slots[s.key] && plan.slots[s.key][p.id];
+            if(v) parts.push(s.label+' ('+p.name+'): '+v);
+          });
+        });
+        if(parts.length) lines.push(dl+' — '+parts.join('; '));
+      });
+      return lines.length ? lines.join('\n') : '(no recent history yet)';
+    });
+  }
+
+  function suggestNextDay(){
+    if(state.busy.suggest) return;
+    state.busy.suggest = true; state.error = null; render();
+    var target = addDays(state.currentDate, 0); // suggesting for currentDate itself (the empty day being viewed)
+    recentHistoryBlock(target).then(function(history){
+      return callApi('/api/suggest', {
+        profiles: state.profiles,
+        pantry: state.pantry,
+        preferences: state.preferences,
+        recentHistory: history,
+        targetDate: target
+      });
+    }).then(function(result){
+      var plan = emptyPlan(target);
+      plan.status = 'draft';
+      SLOTS.forEach(function(s){
+        state.profiles.forEach(function(p){
+          var v = result.slots && result.slots[s.key] && result.slots[s.key][p.id];
+          plan.slots[s.key][p.id] = v || '';
+        });
+      });
+      plan.nutrition = result.nutrition || null;
+      plan.aiNotes = result.notes || null;
+      state.busy.suggest = false;
+      savePlan(target, plan);
+      render();
+      showToast('Suggested plan ready — review & save');
+    }).catch(function(err){
+      state.busy.suggest = false;
+      state.error = "Couldn't get a suggestion right now. Check your connection and try again.";
+      render();
+    });
+  }
+
+  function estimateNutrition(){
+    if(state.busy.nutrition) return;
+    var dateStr = state.currentDate;
+    loadPlan(dateStr).then(function(plan){
+      if(!plan) return;
+      state.busy.nutrition = true; state.error = null; render();
+      callApi('/api/nutrition', { profiles: state.profiles, plan: plan.slots }).then(function(result){
+        plan.nutrition = result.nutrition || null;
+        state.busy.nutrition = false;
+        savePlan(dateStr, plan);
+        render();
+      }).catch(function(){
+        state.busy.nutrition = false;
+        state.error = "Couldn't estimate nutrition right now. Try again in a moment.";
+        render();
+      });
+    });
+  }
+
+  /* ---------------- Actions ---------------- */
+  function goToDate(newDate){
+    state.currentDate = newDate;
+    state.error = null;
+    render();
+    loadPlan(newDate).then(render);
+  }
+
+  function updateMealText(dateStr, slotKey, personId, value){
+    loadPlan(dateStr).then(function(plan){
+      if(!plan) plan = emptyPlan(dateStr);
+      plan = ensureProfilesInPlan(plan);
+      plan.slots[slotKey][personId] = value;
+      if(plan.status==='empty') plan.status='draft';
+      state.planCache[dateStr] = plan;
+    });
+  }
+
+  function confirmSave(){
+    var dateStr = state.currentDate;
+    loadPlan(dateStr).then(function(plan){
+      if(!plan) return;
+      plan.status = 'saved';
+      savePlan(dateStr, plan).then(function(){
+        showToast('Saved');
+        render();
+      });
+    });
+  }
+
+  function addPantryItem(value){
+    value = value.trim();
+    if(!value) return;
+    state.pantry.push(value);
+    saveSettings();
+    render();
+  }
+  function removePantryItem(idx){
+    state.pantry.splice(idx,1);
+    saveSettings();
+    render();
+  }
+  function addProfile(){
+    state.profiles.push({id:uid(), name:'New person'});
+    saveSettings();
+    render();
+  }
+  function removeProfile(id){
+    if(state.profiles.length<=1) return;
+    state.profiles = state.profiles.filter(function(p){return p.id!==id;});
+    saveSettings();
+    render();
+  }
+  function renameProfile(id, name){
+    var p = state.profiles.find(function(p){return p.id===id;});
+    if(p) p.name = name;
+  }
+  function commitProfileNames(){ saveSettings(); }
+  function commitPreferences(value){
+    state.preferences = value;
+    saveSettings();
+  }
+
+  function shareLink(){
+    var msg = 'Join our MealSync meal plan: open '+window.location.href+' and tap "I have a code", then enter: '+state.householdId;
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(msg).then(function(){
+        showToast('Copied — send this to your family');
+      }).catch(function(){
+        showToast('Household code: '+state.householdId);
+      });
+    } else {
+      showToast('Household code: '+state.householdId);
+    }
+  }
+
+  var toastTimer=null;
+  function showToast(msg){
+    var t = document.getElementById('toast');
+    t.textContent = msg;
+    t.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function(){ t.classList.remove('show'); }, 2600);
+  }
+
+  /* ---------------- Render ---------------- */
+  function esc(s){
+    return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function render(){
+    var app = document.getElementById('app');
+    if(!state.householdId){
+      app.innerHTML = renderOnboarding();
+      bindOnboardingEvents();
+      return;
+    }
+    if(!state.loadedSettings){
+      app.innerHTML = '<div class="empty-state"><span class="spinner dark"></span>Loading your kitchen…</div>';
+      return;
+    }
+    var html = '';
+    html += renderHeader();
+    html += renderTabs();
+    if(state.error) html += '<div class="error-box">'+esc(state.error)+'</div>';
+    if(state.tab==='plan') html += renderPlanTab();
+    else html += renderPantryTab();
+    app.innerHTML = html;
+    bindEvents();
+  }
+
+  function renderOnboarding(){
+    var o = state.onboarding;
+    var html = '<header class="top"><div class="brand"><h1>MealSync</h1><p>One shared plan, no more retyping.</p></div></header>';
+    if(o.error) html += '<div class="error-box">'+esc(o.error)+'</div>';
+    if(o.mode==='join'){
+      html += '<div class="section-block">'+
+        '<h2>Join a household</h2>'+
+        '<p class="hint">Enter the code the other person shared with you.</p>'+
+        '<div class="add-row"><input type="text" id="join-code-input" placeholder="e.g. 7K2QRT" value="'+esc(o.joinCode)+'" style="text-transform:uppercase;">'+
+        '<button class="btn btn-primary btn-sm" id="btn-join-confirm" '+(o.busy?'disabled':'')+'>'+(o.busy?'<span class="spinner"></span>Checking…':'Join')+'</button></div>'+
+        '<button class="btn btn-ghost btn-sm" id="btn-back-choose" style="margin-top:12px;">‹ Back</button>'+
+      '</div>';
+    } else {
+      html += '<div class="suggest-cta">'+
+        '<p>MealSync keeps one shared meal plan between everyone in your household. Start by creating a household, or join one someone already made.</p>'+
+        '<div class="btn-row">'+
+          '<button class="btn btn-primary" id="btn-create-household" '+(o.busy?'disabled':'')+'>'+(o.busy?'<span class="spinner"></span>Creating…':'Create a new household')+'</button>'+
+          '<button class="btn btn-outline" id="btn-show-join">I have a code</button>'+
+        '</div>'+
+      '</div>';
+    }
+    return html;
+  }
+
+  function bindOnboardingEvents(){
+    var createBtn = document.getElementById('btn-create-household');
+    if(createBtn) createBtn.onclick = createHousehold;
+    var showJoinBtn = document.getElementById('btn-show-join');
+    if(showJoinBtn) showJoinBtn.onclick = function(){ state.onboarding.mode='join'; state.onboarding.error=null; render(); };
+    var backBtn = document.getElementById('btn-back-choose');
+    if(backBtn) backBtn.onclick = function(){ state.onboarding.mode='choose'; state.onboarding.error=null; render(); };
+    var joinInput = document.getElementById('join-code-input');
+    if(joinInput) joinInput.addEventListener('input', function(){ state.onboarding.joinCode = joinInput.value; });
+    var joinBtn = document.getElementById('btn-join-confirm');
+    if(joinBtn) joinBtn.onclick = function(){ joinHousehold(state.onboarding.joinCode); };
+  }
+
+  function renderHeader(){
+    return '' +
+    '<header class="top">'+
+      '<div class="brand"><h1>MealSync</h1><p>One shared plan, no more retyping.</p></div>'+
+      '<button class="share-btn" id="btn-share">Household: '+esc(state.householdId)+'</button>'+
+    '</header>';
+  }
+
+  function renderTabs(){
+    return '' +
+    '<div class="tabs">'+
+      '<button class="tab '+(state.tab==='plan'?'active':'')+'" data-tab="plan">Plan</button>'+
+      '<button class="tab '+(state.tab==='pantry'?'active':'')+'" data-tab="pantry">Pantry &amp; Preferences</button>'+
+    '</div>';
+  }
+
+  function renderPlanTab(){
+    var dateStr = state.currentDate;
+    var plan = state.planCache[dateStr];
+    if(plan===undefined){
+      return '<div class="empty-state"><span class="spinner dark"></span>Loading plan…</div>';
+    }
+    var statusTag = 'empty';
+    if(plan && plan.status==='saved') statusTag='saved';
+    else if(plan && plan.status==='draft') statusTag='draft';
+
+    var html = '';
+    html += '<div class="daynav">'+
+      '<button data-nav="-1">‹</button>'+
+      '<div class="datelabel"><div class="d">'+dateLabel(dateStr)+'</div>'+
+        '<div class="tag '+statusTag+'">'+(statusTag==='saved'?'Saved':statusTag==='draft'?'Draft — not saved':'No plan yet')+'</div>'+
+      '</div>'+
+      '<button data-nav="1">›</button>'+
+    '</div>';
+
+    var hasAnyMeal = plan && SLOTS.some(function(s){
+      return state.profiles.some(function(p){ return plan.slots[s.key] && plan.slots[s.key][p.id]; });
+    });
+
+    if(!hasAnyMeal){
+      html += '<div class="suggest-cta">'+
+        '<p>Nothing planned for this day yet. Let MealSync suggest a full day\'s meals based on your pantry, preferences and recent meals — or just fill it in yourself below.</p>'+
+        '<button class="btn btn-primary" id="btn-suggest" '+(state.busy.suggest?'disabled':'')+'>'+
+          (state.busy.suggest ? '<span class="spinner"></span>Thinking…' : 'Suggest this day\'s plan')+
+        '</button>'+
+      '</div>';
+    } else if(plan.aiNotes){
+      html += '<div class="suggest-cta"><p><strong>MealSync\'s note:</strong> '+esc(plan.aiNotes)+'</p></div>';
+    }
+
+    var p = plan || emptyPlan(dateStr);
+    p = ensureProfilesInPlan(p);
+
+    SLOTS.forEach(function(s){
+      html += '<div class="slot">'+
+        '<div class="slot-head"><span class="dot '+s.key+'"></span><h3>'+s.label+'</h3></div>'+
+        '<div class="slot-card '+s.key+'">';
+      state.profiles.forEach(function(person){
+        var val = p.slots[s.key][person.id] || '';
+        html += '<div class="person-row">'+
+          '<label>'+esc(person.name)+'</label>'+
+          '<textarea rows="1" data-slot="'+s.key+'" data-person="'+person.id+'" placeholder="What\'s for '+s.label.toLowerCase()+'?">'+esc(val)+'</textarea>';
+        var nutri = p.nutrition && p.nutrition[s.key] && p.nutrition[s.key][person.id];
+        if(nutri){
+          html += '<div class="nutri">'+
+            '<span class="cal">'+Math.round(nutri.calories||0)+' kcal</span>'+
+            '<span>P '+Math.round(nutri.protein_g||0)+'g</span>'+
+            '<span>C '+Math.round(nutri.carbs_g||0)+'g</span>'+
+            '<span>F '+Math.round(nutri.fat_g||0)+'g</span>'+
+            '<span class="balanced-badge '+(nutri.balanced?'yes':'no')+'">'+(nutri.balanced?'Balanced':'Unbalanced')+'</span>'+
+            (nutri.note ? '<div class="nutri-note">'+esc(nutri.note)+'</div>' : '')+
+          '</div>';
+        }
+        html += '</div>';
+      });
+      html += '</div></div>';
+    });
+
+    html += '<div class="btn-row" style="margin-bottom:10px;">'+
+      '<button class="btn btn-outline btn-sm" id="btn-nutrition" '+(state.busy.nutrition?'disabled':'')+'>'+
+        (state.busy.nutrition ? '<span class="spinner dark"></span>Estimating…' : (p.nutrition ? 'Re-estimate nutrition' : 'Estimate nutrition'))+
+      '</button>'+
+    '</div>';
+
+    html += '<div class="savebar"><button class="btn btn-primary" id="btn-save">Save this day\'s plan</button></div>';
+    html += '<p class="disclaimer">Nutrition numbers are AI estimates for typical home-cooked portions — a helpful guide, not a lab measurement.</p>';
+
+    return html;
+  }
+
+  function renderPantryTab(){
+    var html = '';
+    html += '<div class="section-block">'+
+      '<h2>Who\'s eating</h2>'+
+      '<p class="hint">Add or rename the people you plan meals for.</p>';
+    state.profiles.forEach(function(p){
+      html += '<div class="profile-row">'+
+        '<input type="text" data-profile-id="'+p.id+'" value="'+esc(p.name)+'">'+
+        '<button class="remove" data-remove-profile="'+p.id+'">×</button>'+
+      '</div>';
+    });
+    html += '<button class="btn btn-ghost btn-sm" id="btn-add-profile">+ Add person</button>'+
+    '</div>';
+
+    html += '<div class="section-block">'+
+      '<h2>At home right now</h2>'+
+      '<p class="hint">Groceries and veggies currently in your kitchen — used to make suggestions realistic.</p>'+
+      '<div class="chips">';
+    state.pantry.forEach(function(item, idx){
+      html += '<span class="chip">'+esc(item)+'<button data-remove-pantry="'+idx+'">×</button></span>';
+    });
+    html += '</div>'+
+      '<div class="add-row"><input type="text" id="pantry-input" placeholder="e.g. lauki, sprouts, curd"><button class="btn btn-outline btn-sm" id="btn-add-pantry">Add</button></div>'+
+    '</div>';
+
+    html += '<div class="section-block">'+
+      '<h2>Preferences &amp; cuisine style</h2>'+
+      '<p class="hint">Cooking style, likes, dislikes, anything to avoid. Used for every suggestion.</p>'+
+      '<textarea class="prefbox" id="prefs-input" placeholder="e.g. Andhra Telugu home-style cooking, avoid too much oil, Charvik doesn\'t eat spicy food…">'+esc(state.preferences)+'</textarea>'+
+    '</div>';
+
+    return html;
+  }
+
+  /* ---------------- Events ---------------- */
+  function bindEvents(){
+    var shareBtn = document.getElementById('btn-share');
+    if(shareBtn) shareBtn.onclick = shareLink;
+
+    document.querySelectorAll('.tab').forEach(function(el){
+      el.onclick = function(){ state.tab = el.getAttribute('data-tab'); state.error=null; render(); };
+    });
+
+    document.querySelectorAll('[data-nav]').forEach(function(el){
+      el.onclick = function(){
+        var delta = parseInt(el.getAttribute('data-nav'),10);
+        goToDate(addDays(state.currentDate, delta));
+      };
+    });
+
+    var suggestBtn = document.getElementById('btn-suggest');
+    if(suggestBtn) suggestBtn.onclick = suggestNextDay;
+
+    var nutritionBtn = document.getElementById('btn-nutrition');
+    if(nutritionBtn) nutritionBtn.onclick = estimateNutrition;
+
+    var saveBtn = document.getElementById('btn-save');
+    if(saveBtn) saveBtn.onclick = confirmSave;
+
+    document.querySelectorAll('textarea[data-slot]').forEach(function(el){
+      autoGrow(el);
+      el.addEventListener('input', function(){
+        autoGrow(el);
+        updateMealText(state.currentDate, el.getAttribute('data-slot'), el.getAttribute('data-person'), el.value);
+      });
+    });
+
+    document.querySelectorAll('[data-profile-id]').forEach(function(el){
+      el.addEventListener('input', function(){ renameProfile(el.getAttribute('data-profile-id'), el.value); });
+      el.addEventListener('blur', commitProfileNames);
+    });
+    document.querySelectorAll('[data-remove-profile]').forEach(function(el){
+      el.onclick = function(){ removeProfile(el.getAttribute('data-remove-profile')); };
+    });
+    var addProfileBtn = document.getElementById('btn-add-profile');
+    if(addProfileBtn) addProfileBtn.onclick = addProfile;
+
+    var pantryInput = document.getElementById('pantry-input');
+    var addPantryBtn = document.getElementById('btn-add-pantry');
+    if(addPantryBtn) addPantryBtn.onclick = function(){
+      addPantryItem(pantryInput.value);
+      pantryInput.value='';
+    };
+    if(pantryInput) pantryInput.addEventListener('keydown', function(e){
+      if(e.key==='Enter'){ addPantryItem(pantryInput.value); pantryInput.value=''; }
+    });
+    document.querySelectorAll('[data-remove-pantry]').forEach(function(el){
+      el.onclick = function(){ removePantryItem(parseInt(el.getAttribute('data-remove-pantry'),10)); };
+    });
+
+    var prefsInput = document.getElementById('prefs-input');
+    if(prefsInput){
+      prefsInput.addEventListener('blur', function(){ commitPreferences(prefsInput.value); });
+    }
+  }
+
+  function autoGrow(el){
+    el.style.height='auto';
+    el.style.height=(el.scrollHeight)+'px';
+  }
+
+  /* ---------------- Init ---------------- */
+  function boot(){
+    render(); // show loading state immediately
+    loadSettings().then(function(){
+      state.loadedSettings = true;
+      return loadPlan(state.currentDate);
+    }).then(render);
+  }
+
+  var savedHousehold = localStorage.getItem('mealSync_household');
+  if(savedHousehold){
+    state.householdId = savedHousehold;
+    boot();
+  } else {
+    render();
+  }
+})();
+</script>
+</body>
+</html>
